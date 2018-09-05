@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2016
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BalanceManagement", "BalanceManagement\BalanceManagement.csproj", "{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {7D46524D-480B-4533-9249-E8F6477D6D7E}
+	EndGlobalSection
+EndGlobal
