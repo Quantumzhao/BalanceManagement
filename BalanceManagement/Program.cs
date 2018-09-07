@@ -11,7 +11,7 @@ namespace BalanceManagement
 {
 	delegate void KeyPressDelegate(ConsoleKeyInfo key);
 	delegate void HintDelegate();
-	delegate void ReferredFunctionDelegate(Parameter parameter);
+	delegate void ReferredFunctionDelegate(int xCoord, int yCoord);
 
 	class Program
 	{			
@@ -270,7 +270,7 @@ namespace BalanceManagement
 			}
 		}
 
-		static void UpdateData(object param)
+		static void UpdateData(int xCoord, int yCoord)
 		{
 			
 		}
@@ -291,6 +291,15 @@ namespace BalanceManagement
 					ReferedFunctionHandler = UpdateData;
 					KeyPressHandler = MoveCursor;
 					return;
+
+				case ConsoleKey.D3:
+					return;
+
+				case ConsoleKey.Escape:
+				case ConsoleKey.Backspace:
+				case ConsoleKey.Delete:
+					Environment.Exit(0);
+					break;
 
 				default:
 					break;
@@ -329,13 +338,13 @@ namespace BalanceManagement
 
 				case ConsoleKey.Enter:
 				case ConsoleKey.Spacebar:
-					ReferedFunctionHandler(new Parameter(Console.CursorLeft, Console.CursorTop));
+					ReferedFunctionHandler(Console.CursorLeft, Console.CursorTop);
 					break;
 
 				case ConsoleKey.Escape:
 				case ConsoleKey.Backspace:
 				case ConsoleKey.Delete:
-					ReferedFunctionHandler(new Parameter(Console.CursorLeft, Console.CursorTop));
+					ReferedFunctionHandler(Console.CursorLeft, Console.CursorTop);
 					break;
 
 				default:
@@ -391,7 +400,10 @@ namespace BalanceManagement
 		{
 			Console.ForegroundColor = ConsoleColor.Blue;
 			Console.WriteLine("What do you wish to do? ");
-			Console.WriteLine("Press \"1\" to ADD new data row\n      \"2\" to MODIFY existing data rows\n      \"3\" to DELETE existing data rows\n");
+			Console.WriteLine("Press \"1\" to ADD new data row");
+			Console.WriteLine("      \"2\" to MODIFY existing data rows");
+			Console.WriteLine("      \"3\" to DELETE existing data rows");
+			Console.WriteLine("      \"Esc\" to exit");
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
@@ -419,17 +431,5 @@ namespace BalanceManagement
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
-	}
-
-	class Parameter
-	{
-		public Parameter(int x, int y)
-		{
-			xCoord = x;
-			yCoord = y;
-		}
-
-		public int xCoord { get; set; }
-		public int yCoord { get; set; }
 	}
 }
