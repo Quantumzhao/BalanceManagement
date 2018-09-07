@@ -20,7 +20,7 @@ namespace BalanceManagement
 		static OleDbConnection connection;
 		static OleDbCommand command;
 
-		static List<List<string>> rawData;
+		static List<List<TableElement>> rawData;
 
 		const short Columnnumber = 4;
 
@@ -63,7 +63,7 @@ namespace BalanceManagement
 				Console.WriteLine("Connection Susseccfully Opened");
 				Console.WriteLine(connectionString);
 
-				KeyPressHandler = ChooseViewAction;
+				KeyPressHandler = MainOption;
 				HintHandler = Hint.MainOption;
 
 				Console.WriteLine("--Initialization SUCCESSFUL--\n");
@@ -100,18 +100,18 @@ namespace BalanceManagement
 				using (OleDbDataReader reader = command.ExecuteReader())
 				{
 
-					rawData = new List<List<string>>();
+					rawData = new List<List<TableElement>>();
 
 					for (int i = 0; i < Columnnumber; i++)
 					{
-						rawData.Add(new List<string>());
-						rawData[i].Add("");
+						rawData.Add(new List<TableElement>());
+						rawData[i].Add(new TableElement(""));
 					}
 
-					rawData[0][0] = "ItemName";
-					rawData[1][0] = "Cost";
-					rawData[2][0] = "Date";
-					rawData[3][0] = "Comment";
+					rawData[0][0].Content = "ItemName";
+					rawData[1][0].Content = "Cost";
+					rawData[2][0].Content = "Date";
+					rawData[3][0].Content = "Comment";
 
 					int j = 1;
 
@@ -119,13 +119,13 @@ namespace BalanceManagement
 					{
 						for (int i = 0; i < Columnnumber; i++)
 						{
-							rawData[i].Add("");
+							rawData[i].Add(new TableElement(""));
 						}
 
-						rawData[0][j] = reader["ItemName"].ToString();
-						rawData[1][j] = reader["Cost"].ToString();
-						rawData[2][j] = reader["PurchaseDate"].ToString();
-						rawData[3][j] = reader["Comment"].ToString();
+						rawData[0][j].Content = reader["ItemName"].ToString();
+						rawData[1][j].Content = reader["Cost"].ToString();
+						rawData[2][j].Content = reader["PurchaseDate"].ToString();
+						rawData[3][j].Content = reader["Comment"].ToString();
 
 						j++;
 					}
@@ -165,28 +165,41 @@ namespace BalanceManagement
 			return false;
 		}
 
-		static string[,] FormatRawData()
+		static TableElement[,] FormatRawData()
 		{
-			string[,] formattedData = new string[Columnnumber, rawData[0].Count];
+			TableElement[,] formattedData = new TableElement[Columnnumber, rawData[0].Count];
 
 			for (int j = 0; j < rawData[0].Count; j++)
 			{
-				formattedData[0, j] = string.Format("{0, -20}", rawData[0][j]);
-				formattedData[1, j] = string.Format("{0, 7}", rawData[1][j]);
-				formattedData[2, j] = string.Format("{0, 10}", rawData[2][j]);
+				for (int i = 0; i < Columnnumber; i++)
+				{
+					formattedData[i, j] = new TableElement("");
+				}
+			}
+
+			for (int j = 0; j < rawData[0].Count; j++)
+			{
+				formattedData[0, j].Content = string.Format("{0, -20}", rawData[0][j].Content);
+				formattedData[1, j].Content = string.Format("{0, 7}", rawData[1][j].Content);
+				formattedData[2, j].Content = string.Format("{0, 10}", rawData[2][j].Content);
 				formattedData[3, j] = rawData[3][j];
 			}
 
 			return formattedData;
 		}
 
-		static void PrintData(string[,] inputData)
+		static void PrintData(TableElement[,] inputData)
 		{
 			for (int j = 0; j < inputData.GetLength(1); j++)
 			{
 				for (int i = 0; i < inputData.GetLength(0); i++)
 				{
-					Console.Write(inputData[i, j] + "    ");
+					Console.ForegroundColor = inputData[i, j].ContentColor;
+					Console.BackgroundColor = inputData[i, j].BackgroundColor;
+					Console.Write(inputData[i, j].Content + "    ");
+
+					Console.ForegroundColor = ConsoleColor.Black;
+					Console.BackgroundColor = ConsoleColor.White;
 				}
 				Console.WriteLine();
 			}
@@ -234,7 +247,7 @@ namespace BalanceManagement
 			command.ExecuteNonQuery();
 		}
 
-		static void ChooseViewAction(ConsoleKeyInfo key)
+		static void MainOption(ConsoleKeyInfo key)
 		{
 			switch (key.Key)
 			{
@@ -298,7 +311,8 @@ namespace BalanceManagement
 				case ConsoleKey.Escape:
 				case ConsoleKey.Backspace:
 				case ConsoleKey.Delete:
-					Environment.Exit(0);
+					HintHandler = Hint.MainOption;
+					KeyPressHandler = MainOption;
 					break;
 
 				default:
@@ -352,9 +366,9 @@ namespace BalanceManagement
 			}
 		}
 
-		static string[,] Disguise()
+		static TableElement[,] Disguise()
 		{
-			string[,] fakeData = new string[Columnnumber,5];
+			TableElement[,] fakeData = new TableElement[Columnnumber,5];
 
 			// Initialize fakeData Here
 
@@ -363,17 +377,17 @@ namespace BalanceManagement
 
 		static void ExecuteCommand(KeyPressDelegate keyPressHandler, HintDelegate hintHandler)
 		{
-			try
-			{
-				Console.CursorLeft--;
-			}
-			catch { }
-
 			Thread.Sleep(250);
 
 			hintHandler();
 
 			keyPressHandler(Console.ReadKey());
+
+			try
+			{
+				Console.CursorLeft--;
+			}
+			catch { }
 		}
 	}
 
@@ -403,7 +417,7 @@ namespace BalanceManagement
 			Console.WriteLine("Press \"1\" to ADD new data row");
 			Console.WriteLine("      \"2\" to MODIFY existing data rows");
 			Console.WriteLine("      \"3\" to DELETE existing data rows");
-			Console.WriteLine("      \"Esc\" to exit");
+			Console.WriteLine("      \"Esc\" to go back tO last menu");
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
@@ -430,6 +444,19 @@ namespace BalanceManagement
 			Console.WriteLine("               \"Right\" to move cursor RIGHT");
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
+	}
 
+	class TableElement
+	{
+		public TableElement(string content)
+		{
+			Content = content;
+		}
+
+		public string Content { get; set; }
+
+		public ConsoleColor ContentColor { get; set; } = ConsoleColor.Black;
+
+		public ConsoleColor BackgroundColor { get; set; } = ConsoleColor.White;
 	}
 }
