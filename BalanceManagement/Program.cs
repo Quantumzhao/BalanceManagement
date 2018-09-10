@@ -20,9 +20,9 @@ namespace BalanceManagement
 		static OleDbConnection connection;
 		static OleDbCommand command;
 
-		static List<List<TableElement>> rawData;
+		public static List<List<TableElement>> rawData;
 
-		const short Columnnumber = 4;
+		public const short Columnnumber = 4;
 
 		static Dictionary<Month, int> Cost_Month_Mapping;
 
@@ -297,17 +297,20 @@ namespace BalanceManagement
 			switch (key.Key)
 			{
 				case ConsoleKey.D1:
+					// Add Data
 					Hint.AddData();
 					AddData();
 					return;
 
 				case ConsoleKey.D2:
+					// Update Data
 					HintHandler = Hint.UpdateData;					
 					ReferedFunctionHandler = UpdateData;
 					KeyPressHandler = MoveCursor;
 					return;
 
 				case ConsoleKey.D3:
+					// Delete Data
 					HintHandler = Hint.DeleteData;
 					ReferedFunctionHandler = DeleteData;
 					KeyPressHandler = MoveCursor;
@@ -316,6 +319,7 @@ namespace BalanceManagement
 				case ConsoleKey.Escape:
 				case ConsoleKey.Backspace:
 				case ConsoleKey.Delete:
+					// Go Back
 					HintHandler = Hint.MainOption;
 					KeyPressHandler = MainOption;
 					break;
@@ -335,7 +339,7 @@ namespace BalanceManagement
 			
 		}
 
-		static void DeleteData(int xCoord, int y Coord)
+		static void DeleteData(int xCoord, int yCoord)
 		{
 			command.CommandText = "DELETE FROM BalanceManagement WHERE Name = 'Updated Name'";
 			
@@ -348,18 +352,22 @@ namespace BalanceManagement
 			{
 				case ConsoleKey.UpArrow:
 				case ConsoleKey.W:
+					Cursor.YCoord--;
 					break;
 
 				case ConsoleKey.DownArrow:
 				case ConsoleKey.S:
+					Cursor.YCoord++;
 					break;
 
 				case ConsoleKey.LeftArrow:
 				case ConsoleKey.A:
+					Cursor.XCoord--;
 					break;
 
 				case ConsoleKey.RightArrow:
 				case ConsoleKey.D:
+					Cursor.XCoord++;
 					break;
 
 				case ConsoleKey.Enter:
@@ -376,6 +384,8 @@ namespace BalanceManagement
 				default:
 					break;
 			}
+
+			PrintData(FormatRawData());
 		}
 
 		static TableElement[,] Disguise()
@@ -454,12 +464,19 @@ namespace BalanceManagement
 			Console.WriteLine("               \"Down\" to move mouse DOWN");
 			Console.WriteLine("               \"Left\" to move cursor LEFT");
 			Console.WriteLine("               \"Right\" to move cursor RIGHT\n");
+			Console.WriteLine("Press \"Enter\" to select");
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
 		public static void DeleteData()
 		{
-
+			Console.ForegroundColor = ConsoleColor.Red;
+			Console.WriteLine("Important notice: This action is NOT REDOABLE");
+			Console.ForegroundColor = ConsoleColor.Blue;
+			Console.WriteLine("Press keyboard \"Up\" to move cursor UP");
+			Console.WriteLine("               \"Down\" to move cursor down");
+			Console.WriteLine("Press \"Enter\" to select");
+			Console.ForegroundColor = ConsoleColor.Black;
 		}
 	}
 
@@ -475,5 +492,42 @@ namespace BalanceManagement
 		public ConsoleColor ContentColor { get; set; } = ConsoleColor.Black;
 
 		public ConsoleColor BackgroundColor { get; set; } = ConsoleColor.White;
+	}
+
+	class Cursor
+	{
+		static int xCoord = 0;
+		public static int XCoord
+		{
+			get
+			{
+				return xCoord;
+			}
+
+			set
+			{
+				if ((value < Program.Columnnumber) && (value >= 0))
+				{
+					xCoord = value;
+				}
+			}
+		}
+
+		static int yCoord = 0;
+		public static int YCoord
+		{
+			get
+			{
+				return yCoord;
+			}
+
+			set
+			{
+				if ((value < Program.rawData[0].Count) && (value >= 0))
+				{
+					xCoord = value;
+				}
+			}
+		}
 	}
 }
