@@ -285,7 +285,9 @@ namespace BalanceManagement
 
 		static void UpdateData(int xCoord, int yCoord)
 		{
-			
+			command.CommandText = "UPDATE Developer SET Name = 'Updated Name' WHERE Name = 'New Developer'";
+
+			command.ExecuteNonQuery();
 		}
 
 		static void ModifyData(ConsoleKeyInfo key)
@@ -300,12 +302,15 @@ namespace BalanceManagement
 					return;
 
 				case ConsoleKey.D2:
-					Hint.UpdateData();					
+					HintHandler = Hint.UpdateData;					
 					ReferedFunctionHandler = UpdateData;
 					KeyPressHandler = MoveCursor;
 					return;
 
 				case ConsoleKey.D3:
+					HintHandler = Hint.DeleteData;
+					ReferedFunctionHandler = DeleteData;
+					KeyPressHandler = MoveCursor;
 					return;
 
 				case ConsoleKey.Escape:
@@ -328,6 +333,13 @@ namespace BalanceManagement
 		static void DrawDiagram()
 		{
 			
+		}
+
+		static void DeleteData(int xCoord, int y Coord)
+		{
+			command.CommandText = "DELETE FROM BalanceManagement WHERE Name = 'Updated Name'";
+			
+			command.ExecuteNonQuery();
 		}
 
 		static void MoveCursor(ConsoleKeyInfo key)
@@ -403,7 +415,7 @@ namespace BalanceManagement
 		public static void MainOption()
 		{
 			Console.ForegroundColor = ConsoleColor.Blue;
-			Console.WriteLine("\nWhat do you want to do next? ");
+			Console.WriteLine("What do you want to do next? ");
 			Console.WriteLine("Press\"1\" to Retrieve Data");
 			Console.WriteLine("     \"2\" to modify data");
 			Console.WriteLine("     \"Esc\" to exit\n\n");
@@ -417,7 +429,7 @@ namespace BalanceManagement
 			Console.WriteLine("Press \"1\" to ADD new data row");
 			Console.WriteLine("      \"2\" to MODIFY existing data rows");
 			Console.WriteLine("      \"3\" to DELETE existing data rows");
-			Console.WriteLine("      \"Esc\" to go back tO last menu");
+			Console.WriteLine("      \"Esc\" to go back tO last menu\n");
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
@@ -441,8 +453,13 @@ namespace BalanceManagement
 			Console.WriteLine("Press keyboard \"Up\" to move cursor UP");
 			Console.WriteLine("               \"Down\" to move mouse DOWN");
 			Console.WriteLine("               \"Left\" to move cursor LEFT");
-			Console.WriteLine("               \"Right\" to move cursor RIGHT");
+			Console.WriteLine("               \"Right\" to move cursor RIGHT\n");
 			Console.ForegroundColor = ConsoleColor.Black;
+		}
+
+		public static void DeleteData()
+		{
+
 		}
 	}
 
