@@ -21,14 +21,17 @@ namespace BalanceManagement
 		static OleDbCommand command;
 
 		public static List<List<TableElement>> rawData;
+		public static TableElement[,] FormattedData;
 
 		public const short Columnnumber = 4;
 
 		static Dictionary<Month, int> Cost_Month_Mapping;
 
-		static KeyPressDelegate KeyPressHandler;
+		static KeyPressDelegate KeyPressHandler = (ConsoleKeyInfo key) => { Console.CursorLeft--;};
 		static HintDelegate HintHandler;
 		static ReferredFunctionDelegate ReferedFunctionHandler;
+
+		static Cursor SystemCursor { get; set; } = new Cursor();
 
 		static void Main(string[] args)
 		{
@@ -63,10 +66,24 @@ namespace BalanceManagement
 				Console.WriteLine("Connection Susseccfully Opened");
 				Console.WriteLine(connectionString);
 
-				KeyPressHandler = MainOption;
+				KeyPressHandler += MainOption;
 				HintHandler = Hint.MainOption;
 
-				Console.WriteLine("--Initialization SUCCESSFUL--\n");
+				if (RetrieveData())
+				{
+					FormatRawData();
+
+					Console.ForegroundColor = ConsoleColor.DarkGreen;
+					Console.WriteLine("--Initialization SUCCESSFUL--\n");
+				}
+				else
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("--Initialization FAILED--");
+
+					return false;
+				}
+
 				Console.ForegroundColor = ConsoleColor.Black;
 
 				return true;
@@ -99,7 +116,6 @@ namespace BalanceManagement
 
 				using (OleDbDataReader reader = command.ExecuteReader())
 				{
-
 					rawData = new List<List<TableElement>>();
 
 					for (int i = 0; i < Columnnumber; i++)
@@ -165,38 +181,39 @@ namespace BalanceManagement
 			return false;
 		}
 
-		static TableElement[,] FormatRawData()
+		static void FormatRawData()
 		{
-			TableElement[,] formattedData = new TableElement[Columnnumber, rawData[0].Count];
+			FormattedData = new TableElement[Columnnumber, rawData[0].Count];
 
 			for (int j = 0; j < rawData[0].Count; j++)
 			{
 				for (int i = 0; i < Columnnumber; i++)
 				{
-					formattedData[i, j] = new TableElement("");
+					FormattedData[i, j] = new TableElement("");
+
+					FormattedData[i, j].ContentColor = rawData[i][j].ContentColor;
+					FormattedData[i, j].BackgroundColor = rawData[i][j].BackgroundColor;
 				}
 			}
 
 			for (int j = 0; j < rawData[0].Count; j++)
 			{
-				formattedData[0, j].Content = string.Format("{0, -20}", rawData[0][j].Content);
-				formattedData[1, j].Content = string.Format("{0, 7}", rawData[1][j].Content);
-				formattedData[2, j].Content = string.Format("{0, 10}", rawData[2][j].Content);
-				formattedData[3, j] = rawData[3][j];
+				FormattedData[0, j].Content = string.Format("{0, -20}", rawData[0][j].Content);
+				FormattedData[1, j].Content = string.Format("{0, 7}", rawData[1][j].Content);
+				FormattedData[2, j].Content = string.Format("{0, 10}", rawData[2][j].Content);
+				FormattedData[3, j] = rawData[3][j];
 			}
-
-			return formattedData;
 		}
 
-		static void PrintData(TableElement[,] inputData)
+		static void PrintData()
 		{
-			for (int j = 0; j < inputData.GetLength(1); j++)
+			for (int j = 0; j < FormattedData.GetLength(1); j++)
 			{
-				for (int i = 0; i < inputData.GetLength(0); i++)
+				for (int i = 0; i < FormattedData.GetLength(0); i++)
 				{
-					Console.ForegroundColor = inputData[i, j].ContentColor;
-					Console.BackgroundColor = inputData[i, j].BackgroundColor;
-					Console.Write(inputData[i, j].Content + "    ");
+					Console.ForegroundColor = FormattedData[i, j].ContentColor;
+					Console.BackgroundColor = FormattedData[i, j].BackgroundColor;
+					Console.Write(FormattedData[i, j].Content + "    ");
 
 					Console.ForegroundColor = ConsoleColor.Black;
 					Console.BackgroundColor = ConsoleColor.White;
@@ -255,18 +272,20 @@ namespace BalanceManagement
 					Console.Clear();
 					if (RetrieveData())
 					{
-						PrintData(FormatRawData());
+						PrintData();
 					}
 					break;
 
 				case ConsoleKey.D2:
 					HintHandler = Hint.Modify;
-					KeyPressHandler = ModifyData;
-					return;
+					KeyPressHandler -= MainOption;
+					KeyPressHandler += ModifyData;
+					break;
 
 				case ConsoleKey.D:
-					PrintData(Disguise());
-					return;
+					FormattedData = Disguise();
+					//PrintData();
+					break;
 
 				case ConsoleKey.Escape:
 				case ConsoleKey.Backspace:
@@ -292,7 +311,6 @@ namespace BalanceManagement
 
 		static void ModifyData(ConsoleKeyInfo key)
 		{
-			// Console.CursorLeft--;
 
 			switch (key.Key)
 			{
@@ -300,33 +318,41 @@ namespace BalanceManagement
 					// Add Data
 					Hint.AddData();
 					AddData();
-					return;
+					break;
 
 				case ConsoleKey.D2:
 					// Update Data
-					HintHandler = Hint.UpdateData;					
+					Hint.UpdateData();
+					HintHandler = null;
 					ReferedFunctionHandler = UpdateData;
-					KeyPressHandler = MoveCursor;
-					return;
+					Console.CursorTop -= FormattedData.GetLength(1);
+					KeyPressHandler -= ModifyData;
+					KeyPressHandler += MoveCursor;
+					break;
 
 				case ConsoleKey.D3:
 					// Delete Data
 					HintHandler = Hint.DeleteData;
 					ReferedFunctionHandler = DeleteData;
-					KeyPressHandler = MoveCursor;
-					return;
+					KeyPressHandler -= ModifyData;
+					KeyPressHandler += MoveCursor;
+					break;
 
 				case ConsoleKey.Escape:
 				case ConsoleKey.Backspace:
 				case ConsoleKey.Delete:
 					// Go Back
 					HintHandler = Hint.MainOption;
-					KeyPressHandler = MainOption;
+					KeyPressHandler -= ModifyData;
+					KeyPressHandler += MainOption;
 					break;
-
+					
 				default:
 					break;
 			}
+
+			PrintData();
+
 		}
 
 		static void GroupInMonth()
@@ -348,26 +374,29 @@ namespace BalanceManagement
 
 		static void MoveCursor(ConsoleKeyInfo key)
 		{
+			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].ContentColor = ConsoleColor.Black;
+			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].BackgroundColor = ConsoleColor.White;
+
 			switch (key.Key)
 			{
 				case ConsoleKey.UpArrow:
 				case ConsoleKey.W:
-					Cursor.YCoord--;
+					SystemCursor.YCoord--;
 					break;
 
 				case ConsoleKey.DownArrow:
 				case ConsoleKey.S:
-					Cursor.YCoord++;
+					SystemCursor.YCoord++;
 					break;
 
 				case ConsoleKey.LeftArrow:
 				case ConsoleKey.A:
-					Cursor.XCoord--;
+					SystemCursor.XCoord--;
 					break;
 
 				case ConsoleKey.RightArrow:
 				case ConsoleKey.D:
-					Cursor.XCoord++;
+					SystemCursor.XCoord++;
 					break;
 
 				case ConsoleKey.Enter:
@@ -385,31 +414,60 @@ namespace BalanceManagement
 					break;
 			}
 
-			PrintData(FormatRawData());
+			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].ContentColor = ConsoleColor.White;
+			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].BackgroundColor = ConsoleColor.DarkBlue;
+			Console.CursorLeft = 0;
+			Console.CursorTop -= FormattedData.GetLength(1);
+			PrintData();
 		}
 
 		static TableElement[,] Disguise()
 		{
-			TableElement[,] fakeData = new TableElement[Columnnumber,5];
+			TableElement[,] fakeData = new TableElement[Columnnumber,11];
 
-			// Initialize fakeData Here
+			for (int j = 0; j < 11; j++)
+			{
+				for (int i = 0; i < Columnnumber; i++)
+				{
+					fakeData[i, j] = new TableElement("");
+				}
+			}
+
+			fakeData[0, 0].Content = "ItemName";
+			fakeData[1, 0].Content = "Cost";
+			fakeData[2, 0].Content = "Date";
+			fakeData[3, 0].Content = "Comment";
+
+			string fakeItemName = "Apple,Banana,Cherry,Date,Elderberry,Fig,Grape,Haricot Bean,Iceberg Lettuce,Jerusalem artichoke";
+			string fakeCost = "0.01,0.02,0.04,0.08,0.16,0.32,0.64,1.28,2.56,5.12";
+			string fakePurchaseDate = "3/14/1592,6/5/3589,7/9/3238,4/6/2643,3/8/3279,5/02/8841,9/7/1693,9/9/3751,05/8/2097,4/9/4459";
+			string fakeComment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt, ut labore et dolore magna aliqua, Ut enim ad minim veniam, quis nostrud exercitation ullamco, laboris nisi ut aliquip ex ea commodo consequat, Duis aute irure dolor in reprehenderit, in voluptate velit esse cillum dolore, eu fugiat nulla pariatur";
+
+			string[] fakeItemNameArray = fakeItemName.Split(',');
+			string[] fakeCostArray = fakeCost.Split(',');
+			string[] fakePurchaseDateArray = fakePurchaseDate.Split(',');
+			string[] fakeCommentArray = fakeComment.Split(',');
+
+			for (int j = 1; j <= 10; j++)
+			{
+				fakeData[0, j].Content = string.Format("{0, -20}", fakeItemNameArray[j - 1]);
+				fakeData[1, j].Content = string.Format("{0, 7}",fakeCostArray[j - 1]);
+				fakeData[2, j].Content = string.Format("{0, 10}",fakePurchaseDateArray[j - 1]);
+				fakeData[3, j].Content = fakeCommentArray[j - 1];
+			}
 
 			return fakeData;
 		}
 
 		static void ExecuteCommand(KeyPressDelegate keyPressHandler, HintDelegate hintHandler)
 		{
-			Thread.Sleep(250);
-
-			hintHandler();
-
-			keyPressHandler(Console.ReadKey());
-
+			//Thread.Sleep(250);
 			try
 			{
-				Console.CursorLeft--;
-			}
-			catch { }
+				hintHandler();
+			} catch { }
+
+			keyPressHandler(Console.ReadKey());
 		}
 	}
 
@@ -496,8 +554,8 @@ namespace BalanceManagement
 
 	class Cursor
 	{
-		static int xCoord = 0;
-		public static int XCoord
+		int xCoord = 0;
+		public int XCoord
 		{
 			get
 			{
@@ -513,8 +571,8 @@ namespace BalanceManagement
 			}
 		}
 
-		static int yCoord = 0;
-		public static int YCoord
+		int yCoord = 1;
+		public int YCoord
 		{
 			get
 			{
@@ -523,9 +581,9 @@ namespace BalanceManagement
 
 			set
 			{
-				if ((value < Program.rawData[0].Count) && (value >= 0))
+				if ((value < Program.FormattedData.GetLength(1)) && (value > 0))
 				{
-					xCoord = value;
+					yCoord = value;					
 				}
 			}
 		}
