@@ -16,7 +16,7 @@ namespace BalanceManagement
 	class Program
 	{			
 		// Connection string and SQL query  
-		static string connectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Users\yisha\source\repos\BalanceManagement\BalanceManagement\BalanceManagement.mdb";
+		static string connectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Users\yisha\OneDrive\Documents\MyDataSource\BalanceManagement.mdb";
 		static OleDbConnection connection;
 		static OleDbCommand command;
 
@@ -27,7 +27,7 @@ namespace BalanceManagement
 
 		static Dictionary<Month, int> Cost_Month_Mapping;
 
-		static KeyPressDelegate KeyPressHandler = (ConsoleKeyInfo key) => { Console.CursorLeft--;};
+		static KeyPressDelegate KeyPressHandler = (ConsoleKeyInfo key) => { try { Console.CursorLeft--; } catch { } };
 		static HintDelegate HintHandler;
 		static ReferredFunctionDelegate ReferedFunctionHandler;
 
@@ -304,7 +304,17 @@ namespace BalanceManagement
 
 		static void UpdateData(int xCoord, int yCoord)
 		{
-			command.CommandText = "UPDATE Developer SET Name = 'Updated Name' WHERE Name = 'New Developer'";
+			Console.CursorLeft = 0;
+			Console.CursorTop++;
+
+			Console.ForegroundColor = ConsoleColor.Blue;
+			Console.Write("Enter Text Here >>");
+			Console.ForegroundColor = ConsoleColor.Black;
+
+			string inputField = Console.ReadLine();
+
+			command.CommandText = string.Format("UPDATE BalanceManagement SET {0} = '{1}' WHERE {0} = '{2}'", 
+				rawData[xCoord][0].Content, inputField, rawData[xCoord][yCoord].Content);
 
 			command.ExecuteNonQuery();
 		}
@@ -401,13 +411,13 @@ namespace BalanceManagement
 
 				case ConsoleKey.Enter:
 				case ConsoleKey.Spacebar:
-					ReferedFunctionHandler(Console.CursorLeft, Console.CursorTop);
+					ReferedFunctionHandler(SystemCursor.XCoord,SystemCursor.YCoord);
 					break;
 
 				case ConsoleKey.Escape:
 				case ConsoleKey.Backspace:
 				case ConsoleKey.Delete:
-					ReferedFunctionHandler(Console.CursorLeft, Console.CursorTop);
+					ReferedFunctionHandler(SystemCursor.XCoord, SystemCursor.YCoord);
 					break;
 
 				default:
@@ -423,6 +433,8 @@ namespace BalanceManagement
 
 		static TableElement[,] Disguise()
 		{
+			// Deprecated
+
 			TableElement[,] fakeData = new TableElement[Columnnumber,11];
 
 			for (int j = 0; j < 11; j++)
@@ -432,7 +444,7 @@ namespace BalanceManagement
 					fakeData[i, j] = new TableElement("");
 				}
 			}
-
+			
 			fakeData[0, 0].Content = "ItemName";
 			fakeData[1, 0].Content = "Cost";
 			fakeData[2, 0].Content = "Date";
@@ -454,7 +466,10 @@ namespace BalanceManagement
 				fakeData[1, j].Content = string.Format("{0, 7}",fakeCostArray[j - 1]);
 				fakeData[2, j].Content = string.Format("{0, 10}",fakePurchaseDateArray[j - 1]);
 				fakeData[3, j].Content = fakeCommentArray[j - 1];
+
 			}
+
+
 
 			return fakeData;
 		}
@@ -468,6 +483,12 @@ namespace BalanceManagement
 			} catch { }
 
 			keyPressHandler(Console.ReadKey());
+		}
+
+		static string InputText()
+		{
+			Console.CursorLeft = 0;
+			return (Console.ReadLine());
 		}
 	}
 
