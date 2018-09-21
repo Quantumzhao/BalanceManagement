@@ -24,6 +24,7 @@ namespace BalanceManagement
 		public static TableElement[,] FormattedData;
 
 		public const short Columnnumber = 4;
+		public static string TableName = "BalanceManagement";
 
 		static Dictionary<Month, int> Cost_Month_Mapping;
 
@@ -112,7 +113,7 @@ namespace BalanceManagement
 		{
 			try
 			{
-				command.CommandText = "SELECT * FROM BalanceManagement";
+				command.CommandText = string.Format("SELECT * FROM {0}",TableName);
 
 				using (OleDbDataReader reader = command.ExecuteReader())
 				{
@@ -146,6 +147,8 @@ namespace BalanceManagement
 						j++;
 					}
 				}
+
+				FormatRawData();
 
 				Console.ForegroundColor = ConsoleColor.DarkGreen;
 				Console.WriteLine("\n--Retrieved data successfully--\n");
@@ -259,7 +262,9 @@ namespace BalanceManagement
 				}
 			}
 
-			command.CommandText = string.Format("INSERT INTO BalanceManagement(ItemName,Cost,PurchaseDate,Comment)Values('{0}','{1}','{2}','{3}')", tempString[0], tempString[1], tempString[2], tempString[3]);
+			command.CommandText = string.Format(
+				"INSERT INTO {4}(ItemName,Cost,PurchaseDate,Comment)Values('{0}','{1}','{2}','{3}')"
+				, tempString[0], tempString[1], tempString[2], tempString[3], TableName);
 
 			command.ExecuteNonQuery();
 		}
@@ -283,7 +288,7 @@ namespace BalanceManagement
 					break;
 
 				case ConsoleKey.D:
-					FormattedData = Disguise();
+					DoCamouflage();
 					//PrintData();
 					break;
 
@@ -313,8 +318,8 @@ namespace BalanceManagement
 
 			string inputField = Console.ReadLine();
 
-			command.CommandText = string.Format("UPDATE BalanceManagement SET {0} = '{1}' WHERE {0} = '{2}'", 
-				rawData[xCoord][0].Content, inputField, rawData[xCoord][yCoord].Content);
+			command.CommandText = string.Format("UPDATE {3} SET {0} = '{1}' WHERE {0} = '{2}'", 
+				rawData[xCoord][0].Content, inputField, rawData[xCoord][yCoord].Content, TableName);
 
 			command.ExecuteNonQuery();
 		}
@@ -342,8 +347,10 @@ namespace BalanceManagement
 
 				case ConsoleKey.D3:
 					// Delete Data
-					HintHandler = Hint.DeleteData;
+					Hint.DeleteData();
+					HintHandler = null;
 					ReferedFunctionHandler = DeleteData;
+					Console.CursorTop -= FormattedData.GetLength(1) - 6;
 					KeyPressHandler -= ModifyData;
 					KeyPressHandler += MoveCursor;
 					break;
@@ -355,10 +362,10 @@ namespace BalanceManagement
 					HintHandler = Hint.MainOption;
 					KeyPressHandler -= ModifyData;
 					KeyPressHandler += MainOption;
-					break;
+					return;
 					
 				default:
-					break;
+					return;
 			}
 
 			PrintData();
@@ -377,7 +384,7 @@ namespace BalanceManagement
 
 		static void DeleteData(int xCoord, int yCoord)
 		{
-			command.CommandText = "DELETE FROM BalanceManagement WHERE Name = 'Updated Name'";
+			command.CommandText = string.Format("DELETE FROM {0} WHERE Name = 'Updated Name'", TableName);
 			
 			command.ExecuteNonQuery();
 		}
@@ -387,26 +394,47 @@ namespace BalanceManagement
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].ContentColor = ConsoleColor.Black;
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].BackgroundColor = ConsoleColor.White;
 
+			if (ReferedFunctionHandler == DeleteData)
+			{
+				for (int i = 0; i < Columnnumber; i++)
+				{
+					FormattedData[i, SystemCursor.YCoord].ContentColor = ConsoleColor.Black;
+					FormattedData[i, SystemCursor.YCoord].BackgroundColor = ConsoleColor.White;
+				}
+			}
+
 			switch (key.Key)
 			{
 				case ConsoleKey.UpArrow:
 				case ConsoleKey.W:
+				case ConsoleKey.J:
 					SystemCursor.YCoord--;
 					break;
 
 				case ConsoleKey.DownArrow:
 				case ConsoleKey.S:
+				case ConsoleKey.K:
 					SystemCursor.YCoord++;
 					break;
 
 				case ConsoleKey.LeftArrow:
 				case ConsoleKey.A:
-					SystemCursor.XCoord--;
+				case ConsoleKey.H:
+
+					if (ReferedFunctionHandler != DeleteData)
+					{
+						SystemCursor.XCoord--;
+					}
 					break;
 
 				case ConsoleKey.RightArrow:
 				case ConsoleKey.D:
-					SystemCursor.XCoord++;
+				case ConsoleKey.L:
+
+					if (ReferedFunctionHandler != DeleteData)
+					{
+						SystemCursor.XCoord++;
+					}
 					break;
 
 				case ConsoleKey.Enter:
@@ -417,61 +445,35 @@ namespace BalanceManagement
 				case ConsoleKey.Escape:
 				case ConsoleKey.Backspace:
 				case ConsoleKey.Delete:
-					ReferedFunctionHandler(SystemCursor.XCoord, SystemCursor.YCoord);
-					break;
+					ReferedFunctionHandler = null;
+					HintHandler = Hint.Modify;
+					KeyPressHandler -= MoveCursor;
+					KeyPressHandler += ModifyData;
+					return;
 
 				default:
-					break;
+					return;
 			}
 
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].ContentColor = ConsoleColor.White;
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].BackgroundColor = ConsoleColor.DarkBlue;
+
+			if (ReferedFunctionHandler == DeleteData)
+			{
+				for (int i = 0; i < Columnnumber; i++)
+				{
+					FormattedData[i, SystemCursor.YCoord].ContentColor = ConsoleColor.White;
+					FormattedData[i, SystemCursor.YCoord].BackgroundColor = ConsoleColor.DarkBlue;
+				}
+			}
 			Console.CursorLeft = 0;
 			Console.CursorTop -= FormattedData.GetLength(1);
 			PrintData();
 		}
 
-		static TableElement[,] Disguise()
+		static void DoCamouflage()
 		{
-			// Deprecated
-
-			TableElement[,] fakeData = new TableElement[Columnnumber,11];
-
-			for (int j = 0; j < 11; j++)
-			{
-				for (int i = 0; i < Columnnumber; i++)
-				{
-					fakeData[i, j] = new TableElement("");
-				}
-			}
-			
-			fakeData[0, 0].Content = "ItemName";
-			fakeData[1, 0].Content = "Cost";
-			fakeData[2, 0].Content = "Date";
-			fakeData[3, 0].Content = "Comment";
-
-			string fakeItemName = "Apple,Banana,Cherry,Date,Elderberry,Fig,Grape,Haricot Bean,Iceberg Lettuce,Jerusalem artichoke";
-			string fakeCost = "0.01,0.02,0.04,0.08,0.16,0.32,0.64,1.28,2.56,5.12";
-			string fakePurchaseDate = "3/14/1592,6/5/3589,7/9/3238,4/6/2643,3/8/3279,5/02/8841,9/7/1693,9/9/3751,05/8/2097,4/9/4459";
-			string fakeComment = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt, ut labore et dolore magna aliqua, Ut enim ad minim veniam, quis nostrud exercitation ullamco, laboris nisi ut aliquip ex ea commodo consequat, Duis aute irure dolor in reprehenderit, in voluptate velit esse cillum dolore, eu fugiat nulla pariatur";
-
-			string[] fakeItemNameArray = fakeItemName.Split(',');
-			string[] fakeCostArray = fakeCost.Split(',');
-			string[] fakePurchaseDateArray = fakePurchaseDate.Split(',');
-			string[] fakeCommentArray = fakeComment.Split(',');
-
-			for (int j = 1; j <= 10; j++)
-			{
-				fakeData[0, j].Content = string.Format("{0, -20}", fakeItemNameArray[j - 1]);
-				fakeData[1, j].Content = string.Format("{0, 7}",fakeCostArray[j - 1]);
-				fakeData[2, j].Content = string.Format("{0, 10}",fakePurchaseDateArray[j - 1]);
-				fakeData[3, j].Content = fakeCommentArray[j - 1];
-
-			}
-
-
-
-			return fakeData;
+			TableName = "Camouflage";
 		}
 
 		static void ExecuteCommand(KeyPressDelegate keyPressHandler, HintDelegate hintHandler)
@@ -518,7 +520,7 @@ namespace BalanceManagement
 			Console.WriteLine("Press \"1\" to ADD new data row");
 			Console.WriteLine("      \"2\" to MODIFY existing data rows");
 			Console.WriteLine("      \"3\" to DELETE existing data rows");
-			Console.WriteLine("      \"Esc\" to go back tO last menu\n");
+			Console.WriteLine("      \"Esc\" to go back to last menu\n");
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
