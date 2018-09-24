@@ -20,13 +20,13 @@ namespace BalanceManagement
 		static OleDbConnection connection;
 		static OleDbCommand command;
 
-		public static List<List<TableElement>> rawData;
+		public static List<List<string>> rawData;
 		public static TableElement[,] FormattedData;
 
 		public const short Columnnumber = 4;
 		public static string TableName = "BalanceManagement";
 
-		static Dictionary<Month, int> Cost_Month_Mapping;
+		static Dictionary<int, int> Cost_Month_Mapping;
 
 		static KeyPressDelegate KeyPressHandler = (ConsoleKeyInfo key) => { try { Console.CursorLeft--; } catch { } };
 		static HintDelegate HintHandler;
@@ -74,6 +74,8 @@ namespace BalanceManagement
 				{
 					FormatRawData();
 
+					SetUpCost_MonthMapping();
+
 					Console.ForegroundColor = ConsoleColor.DarkGreen;
 					Console.WriteLine("--Initialization SUCCESSFUL--\n");
 				}
@@ -117,18 +119,18 @@ namespace BalanceManagement
 
 				using (OleDbDataReader reader = command.ExecuteReader())
 				{
-					rawData = new List<List<TableElement>>();
+					rawData = new List<List<string>>();
 
 					for (int i = 0; i < Columnnumber; i++)
 					{
-						rawData.Add(new List<TableElement>());
-						rawData[i].Add(new TableElement(""));
+						rawData.Add(new List<string>());
+						rawData[i].Add("");
 					}
 
-					rawData[0][0].Content = "ItemName";
-					rawData[1][0].Content = "Cost";
-					rawData[2][0].Content = "Date";
-					rawData[3][0].Content = "Comment";
+					rawData[0][0] = "ItemName";
+					rawData[1][0] = "Cost";
+					rawData[2][0] = "Date";
+					rawData[3][0] = "Comment";
 
 					int j = 1;
 
@@ -136,13 +138,13 @@ namespace BalanceManagement
 					{
 						for (int i = 0; i < Columnnumber; i++)
 						{
-							rawData[i].Add(new TableElement(""));
+							rawData[i].Add("");
 						}
 
-						rawData[0][j].Content = reader["ItemName"].ToString();
-						rawData[1][j].Content = reader["Cost"].ToString();
-						rawData[2][j].Content = reader["PurchaseDate"].ToString();
-						rawData[3][j].Content = reader["Comment"].ToString();
+						rawData[0][j] = reader["ItemName"].ToString();
+						rawData[1][j] = reader["Cost"].ToString();
+						rawData[2][j] = reader["PurchaseDate"].ToString();
+						rawData[3][j] = reader["Comment"].ToString();
 
 						j++;
 					}
@@ -194,17 +196,17 @@ namespace BalanceManagement
 				{
 					FormattedData[i, j] = new TableElement("");
 
-					FormattedData[i, j].ContentColor = rawData[i][j].ContentColor;
-					FormattedData[i, j].BackgroundColor = rawData[i][j].BackgroundColor;
+					FormattedData[i, j].ContentColor = ConsoleColor.Black;
+					FormattedData[i, j].BackgroundColor = ConsoleColor.White;
 				}
 			}
 
 			for (int j = 0; j < rawData[0].Count; j++)
 			{
-				FormattedData[0, j].Content = string.Format("{0, -20}", rawData[0][j].Content);
-				FormattedData[1, j].Content = string.Format("{0, 7}", rawData[1][j].Content);
-				FormattedData[2, j].Content = string.Format("{0, 10}", rawData[2][j].Content);
-				FormattedData[3, j] = rawData[3][j];
+				FormattedData[0, j].Content = string.Format("{0, -20}", rawData[0][j]);
+				FormattedData[1, j].Content = string.Format("{0, 7}", rawData[1][j]);
+				FormattedData[2, j].Content = string.Format("{0, 10}", rawData[2][j]);
+				FormattedData[3, j].Content = rawData[3][j];
 			}
 		}
 
@@ -319,7 +321,7 @@ namespace BalanceManagement
 			string inputField = Console.ReadLine();
 
 			command.CommandText = string.Format("UPDATE {3} SET {0} = '{1}' WHERE {0} = '{2}'", 
-				rawData[xCoord][0].Content, inputField, rawData[xCoord][yCoord].Content, TableName);
+				rawData[xCoord][0], inputField, rawData[xCoord][yCoord], TableName);
 
 			command.ExecuteNonQuery();
 		}
@@ -492,11 +494,48 @@ namespace BalanceManagement
 			Console.CursorLeft = 0;
 			return (Console.ReadLine());
 		}
+
+		static void CostInMonthView()
+		{
+			
+		}
+
+		static void SetUpCost_MonthMapping()
+		{
+			try
+			{
+				//for (int i = 0; i < 12; i++)
+				//{
+
+				//	if(i == Convert.ToInt32(from Date in TableName
+				//							where Date.ToString().Split('/')[0] == i.ToString()
+				//							select Date)
+				//	)
+				//	{
+				//		Cost_Month_Mapping[i]++;
+				//	}
+				//}
+
+				string[] monthArray = (string[])(from Date in rawData[2]
+								 select Date);
+
+				for (int i = 0; i < 12; i++)
+				{
+					Cost_Month_Mapping[Convert.ToInt32(monthArray[i])]++;
+				}
+			}
+			catch (Exception ex)
+			{
+				Console.ForegroundColor = ConsoleColor.Red;
+				Console.WriteLine(ex.Message);
+				Console.ForegroundColor = ConsoleColor.Black;
+			}
+		}
 	}
 
 	enum Month
 	{
-		January  , Febuary, March   , April   , 
+		January = 1 , Febuary, March   , April   , 
 		May      , June   , July    , August  , 
 		September, October, November, December		
 	}
