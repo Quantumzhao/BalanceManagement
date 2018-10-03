@@ -230,7 +230,7 @@ namespace BalanceManagement
 		static void AddData()
 		{
 			string[] tempString = new string[Columnnumber];
-			string[] tempInputString = Console.ReadLine().Split(' ');
+			string[] tempInputString = Console.ReadLine().Split(',');
 
 			try
 			{
@@ -573,8 +573,9 @@ namespace BalanceManagement
 
 			Console.ForegroundColor = ConsoleColor.Blue;
 			Console.WriteLine("Please enter data in the following format: ");
+			Console.WriteLine("NOTE: NO SPACE AFTER COMMA");
 			Console.ForegroundColor = ConsoleColor.Black;
-			Console.WriteLine("ItemName                   Cost          Date    Comment");
+			Console.WriteLine("ItemName,Cost,Date,Comment");
 		}
 
 		public static void UpdateData()
