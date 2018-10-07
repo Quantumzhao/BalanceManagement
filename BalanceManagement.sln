@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.28010.2016
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BalanceManagement", "BalanceManagement\BalanceManagement.csproj", "{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerpExpressDepositManagement", "TerpExpressDepositManagement\TerpExpressDepositManagement.csproj", "{AB7EFA99-F4BD-4B52-8A1D-088053DCAD6F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0FBBDBCE-2B15-41A0-B52C-F20EDEA2A0D5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AB7EFA99-F4BD-4B52-8A1D-088053DCAD6F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AB7EFA99-F4BD-4B52-8A1D-088053DCAD6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AB7EFA99-F4BD-4B52-8A1D-088053DCAD6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AB7EFA99-F4BD-4B52-8A1D-088053DCAD6F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Data.OleDb;
+using TerpExpressDepositManagement;
 
 // Adapted From https://www.c-sharpcorner.com/article/read-microsoft-access-database-in-C-Sharp/
 
@@ -14,7 +15,7 @@ namespace BalanceManagement
 	delegate void ReferredFunctionDelegate(int xCoord, int yCoord);
 
 	class Program
-	{			
+	{
 		// Connection string and SQL query  
 		static string connectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Users\yisha\OneDrive\Documents\MyDataSource\BalanceManagement.mdb";
 		static OleDbConnection connection;
@@ -31,6 +32,10 @@ namespace BalanceManagement
 		static KeyPressDelegate KeyPressHandler = (ConsoleKeyInfo key) => { try { Console.CursorLeft--; } catch { } };
 		static HintDelegate HintHandler;
 		static ReferredFunctionDelegate ReferedFunctionHandler;
+
+		static List<object> PluginManager { get; set; } = new List<object>();
+
+		//static Communicator<OleDbConnection, OleDbCommand> DataCommunicator;
 
 		static Cursor SystemCursor { get; set; } = new Cursor();
 
@@ -63,6 +68,13 @@ namespace BalanceManagement
 
 				// Open connecton
 				connection.Open();
+
+				PluginManager.Add
+				(
+					new Communicator<OleDbConnection, OleDbCommand, TXDeposit>
+					(connection, command, new TXDeposit())
+				);
+
 				Console.ForegroundColor = ConsoleColor.DarkGreen;
 				Console.WriteLine("Connection Susseccfully Opened");
 				Console.WriteLine(connectionString);
@@ -497,7 +509,15 @@ namespace BalanceManagement
 
 		static void CostInMonthView()
 		{
-			
+			var v = ((Func<string>)(() =>
+			{
+				for (int i = 0; i < length; i++)
+				{
+
+				}
+
+				return "some value";
+			}))();
 		}
 
 		static void SetUpCost_MonthMapping()
@@ -530,6 +550,11 @@ namespace BalanceManagement
 				Console.WriteLine(ex.Message);
 				Console.ForegroundColor = ConsoleColor.Black;
 			}
+		}
+
+		public double GetTerpExpressDeposit()
+		{
+			return 0;
 		}
 	}
 
@@ -649,6 +674,20 @@ namespace BalanceManagement
 					yCoord = value;					
 				}
 			}
+		}
+	}
+
+	class Communicator<Tconnection, Tcommand, TPlugin>
+	{
+		public Tconnection Connection { get; set; }
+		public Tcommand Command { get; set; }
+		public TPlugin Plugin { get; set; }
+
+		public Communicator(Tconnection tconnection, Tcommand tcommand, TPlugin tplugin)
+		{
+			Connection = tconnection;
+			Command = tcommand;
+			Plugin = tplugin;
 		}
 	}
 }
