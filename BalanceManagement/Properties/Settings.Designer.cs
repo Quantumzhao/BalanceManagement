@@ -25,10 +25,11 @@ namespace BalanceManagement.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DataSource {
+        [global::System.Configuration.DefaultSettingValueAttribute("C:\\Users\\yisha\\source\\repos\\BalanceManagement\\BalanceManagement\\Subscription\\Subs" +
+            "cription Configuration.txt")]
+        public string Address {
             get {
-                return ((string)(this["DataSource"]));
+                return ((string)(this["Address"]));
             }
         }
     }

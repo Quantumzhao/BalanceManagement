@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.IO;
 using System.Threading;
 using System.Data.OleDb;
 using TerpExpressDepositManagement;
@@ -41,7 +41,7 @@ namespace BalanceManagement
 
 		static void Main(string[] args)
 		{
-			if (initialization())
+			if (initialization(args))
 			{
 				while (true)
 				{
@@ -52,10 +52,22 @@ namespace BalanceManagement
 			Finalization();
 		}
 
-		static bool initialization()
+		static bool initialization(string[] args)
 		{
 			try
 			{
+				if (args.Length != 0)
+				{
+					ExternalInvocationHandler(args);
+
+					if (args[0] == "Spotify")
+					{
+						Console.WriteLine("succeed");
+						Console.ReadKey();
+						Environment.Exit(0);
+					}
+				}
+				ReadSubscriptionConfigurationFile();
 				Console.BackgroundColor = ConsoleColor.White;
 				Console.ForegroundColor = ConsoleColor.Black;
 
@@ -120,7 +132,7 @@ namespace BalanceManagement
 
 		static void Finalization()
 		{
-			connection.Close();
+			connection?.Close();
 		}
 
 		static bool RetrieveData()
@@ -501,6 +513,55 @@ namespace BalanceManagement
 			keyPressHandler(Console.ReadKey());
 		}
 
+		static void ExternalInvocationHandler(string[] args)
+		{
+			string prefix = args[0].Split(' ')[0].ToUpper();
+
+			switch (prefix)
+			{
+				case "[SUBSCRIPTION]":
+					SubscriptionEventHandler(args[0].Split(' ')[1].ToUpper());
+					break;
+
+				default:
+					break;
+			}
+		}
+
+		static void SubscriptionEventHandler(string subscriptionType)
+		{
+			string[,] dataMap = ReadSubscriptionConfigurationFile();
+		}
+
+		static string[,] ReadSubscriptionConfigurationFile(string address = "")
+		{
+			address = address != "" ? address : @"C:\Users\yisha\source\repos\BalanceManagement\BalanceManagement\Subscription\Subscription Configuration.txt";
+
+			using (StreamReader reader = new StreamReader(address))
+			{
+				List<string> content= new List<string>();
+
+				while (!reader.EndOfStream)
+				{
+					content.Add(reader.ReadLine());
+				}
+
+				string[,] dataMap = new string[content.Count, 3];
+
+				for (int j = 0; j < dataMap.GetLength(1); j++)
+				{
+					string[] currentRow = content[j].Split(' ');
+
+					for (int i = 0; i < dataMap.GetLength(0); i++)
+					{
+						dataMap[i, j] = currentRow[i];
+					}
+				}
+
+				return dataMap;
+			}
+		}
+
 		static string InputText()
 		{
 			Console.CursorLeft = 0;
@@ -509,15 +570,7 @@ namespace BalanceManagement
 
 		static void CostInMonthView()
 		{
-			var v = ((Func<string>)(() =>
-			{
-				for (int i = 0; i < length; i++)
-				{
-
-				}
-
-				return "some value";
-			}))();
+			
 		}
 
 		static void SetUpCost_MonthMapping()
