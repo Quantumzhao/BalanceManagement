@@ -56,18 +56,7 @@ namespace BalanceManagement
 		{
 			try
 			{
-				if (args.Length != 0)
-				{
-					ExternalInvocationHandler(args);
-
-					if (args[0] == "Spotify")
-					{
-						Console.WriteLine("succeed");
-						Console.ReadKey();
-						Environment.Exit(0);
-					}
-				}
-				ReadSubscriptionConfigurationFile();
+				//ReadSubscriptionConfigurationFile();
 				Console.BackgroundColor = ConsoleColor.White;
 				Console.ForegroundColor = ConsoleColor.Black;
 
@@ -99,6 +88,11 @@ namespace BalanceManagement
 					FormatRawData();
 
 					SetUpCost_MonthMapping();
+
+					if (args.Length != 0)
+					{
+						ExternalInvocationHandler(args);
+					}
 
 					Console.ForegroundColor = ConsoleColor.DarkGreen;
 					Console.WriteLine("--Initialization SUCCESSFUL--\n");
@@ -520,7 +514,7 @@ namespace BalanceManagement
 			switch (prefix)
 			{
 				case "[SUBSCRIPTION]":
-					SubscriptionEventHandler(args[0].Split(' ')[1].ToUpper());
+					SubscriptionEventHandler(args[0].ToUpper());
 					break;
 
 				default:
@@ -528,8 +522,14 @@ namespace BalanceManagement
 			}
 		}
 
-		static void SubscriptionEventHandler(string subscriptionType)
+		static void SubscriptionEventHandler(string subscriptionInfo)
 		{
+			string[] subscriptionInfoSplit = subscriptionInfo.Split(' ');
+
+			string itemName = string.Format("{0} {1}", subscriptionInfoSplit[1], subscriptionInfoSplit[2]);
+
+			
+
 			string[,] dataMap = ReadSubscriptionConfigurationFile();
 		}
 
