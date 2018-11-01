@@ -41,6 +41,7 @@ namespace BalanceManagement
 
 		static void Main(string[] args)
 		{
+			args = new string[1] { "[subscription] [Spotify] Student Plan" };
 			if (initialization(args))
 			{
 				while (true)
@@ -245,10 +246,20 @@ namespace BalanceManagement
 			}
 		}
 
-		static void AddData()
+		static void AddData(string data = "")
 		{
 			string[] tempString = new string[Columnnumber];
-			string[] tempInputString = Console.ReadLine().Split(',');
+
+			string[] tempInputString;
+
+			if (data == "")
+			{
+				tempInputString = Console.ReadLine().Split(',');
+			}
+			else
+			{
+				tempInputString = data.Split(',');
+			}
 
 			try
 			{
@@ -498,7 +509,6 @@ namespace BalanceManagement
 
 		static void ExecuteCommand(KeyPressDelegate keyPressHandler, HintDelegate hintHandler)
 		{
-			//Thread.Sleep(250);
 			try
 			{
 				hintHandler();
@@ -528,9 +538,17 @@ namespace BalanceManagement
 
 			string itemName = string.Format("{0} {1}", subscriptionInfoSplit[1], subscriptionInfoSplit[2]);
 
-			
-
 			string[,] dataMap = ReadSubscriptionConfigurationFile();
+
+			for (int i = 0; i < dataMap.GetLength(1); i++)
+			{
+				if (subscriptionInfoSplit[1].Equals(dataMap[0, i].ToUpper()))
+				{
+					//rawData.Add(new List<string> { dataMap[0, i], dataMap[1, i], dataMap[2, i] });
+
+					AddData(string.Format("{0},{1},,Auto Executed Deduction", itemName, dataMap[1, i]));
+				}
+			}
 		}
 
 		static string[,] ReadSubscriptionConfigurationFile(string address = "")
@@ -546,7 +564,7 @@ namespace BalanceManagement
 					content.Add(reader.ReadLine());
 				}
 
-				string[,] dataMap = new string[content.Count, 3];
+				string[,] dataMap = new string[3, content.Count];
 
 				for (int j = 0; j < dataMap.GetLength(1); j++)
 				{
