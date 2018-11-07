@@ -41,7 +41,7 @@ namespace BalanceManagement
 
 		static void Main(string[] args)
 		{
-			args = new string[1] { "[subscription] [Spotify] Student Plan" };
+			//args = new string[1] { "[Subscription] [Spotify] StudentPlan" };
 			if (initialization(args))
 			{
 				while (true)
@@ -519,12 +519,12 @@ namespace BalanceManagement
 
 		static void ExternalInvocationHandler(string[] args)
 		{
-			string prefix = args[0].Split(' ')[0].ToUpper();
+			string prefix = args[0].Split(' ')[0];
 
 			switch (prefix)
 			{
-				case "[SUBSCRIPTION]":
-					SubscriptionEventHandler(args[0].ToUpper());
+				case "[Subscription]":
+					SubscriptionEventHandler(args[0]);
 					break;
 
 				default:
@@ -540,13 +540,14 @@ namespace BalanceManagement
 
 			string[,] dataMap = ReadSubscriptionConfigurationFile();
 
-			for (int i = 0; i < dataMap.GetLength(1); i++)
+			for (int j = 0; j < dataMap.GetLength(1); j++)
 			{
-				if (subscriptionInfoSplit[1].Equals(dataMap[0, i].ToUpper()))
+				if (subscriptionInfoSplit[1].Equals(dataMap[0, j]))
 				{
-					//rawData.Add(new List<string> { dataMap[0, i], dataMap[1, i], dataMap[2, i] });
+					// Assume the external invocation executes monthly
+					string date = DateTime.Now.Month.ToString() + "/27/" + DateTime.Now.Year;
 
-					AddData(string.Format("{0},{1},,Auto Executed Deduction", itemName, dataMap[1, i]));
+					AddData(string.Format("{0},{1},{2},Auto Executed Deduction", itemName, dataMap[1, j], date));
 				}
 			}
 		}
@@ -564,7 +565,7 @@ namespace BalanceManagement
 					content.Add(reader.ReadLine());
 				}
 
-				string[,] dataMap = new string[3, content.Count];
+				string[,] dataMap = new string[content[0].Split(' ').GetLength(0), content.Count];
 
 				for (int j = 0; j < dataMap.GetLength(1); j++)
 				{
