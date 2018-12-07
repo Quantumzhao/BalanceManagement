@@ -27,7 +27,7 @@ namespace BalanceManagement
 		public const short Columnnumber = 4;
 		public static string TableName = "BalanceManagement";
 
-		static Dictionary<int, int> Cost_Month_Mapping;
+		static Dictionary<int, double> Month_Cost_Mapping = new Dictionary<int, double>();
 
 		static KeyPressDelegate KeyPressHandler = (ConsoleKeyInfo key) => { try { Console.CursorLeft--; } catch { } };
 		static HintDelegate HintHandler;
@@ -244,6 +244,10 @@ namespace BalanceManagement
 				}
 				Console.WriteLine();
 			}
+
+			Console.WriteLine("\n\n");
+
+			DrawDiagram();
 		}
 
 		static void AddData(string data = "")
@@ -403,14 +407,34 @@ namespace BalanceManagement
 
 		}
 
-		static void GroupInMonth()
-		{
-			
-		}
-
 		static void DrawDiagram()
 		{
-			
+			Console.ForegroundColor = ConsoleColor.Blue;
+
+			for (int j = 1; j <= 12; j++)
+			{
+				Console.Write(j + "\t");
+
+				int bar = (int)Month_Cost_Mapping[j] / 2;
+				bool hasRemainder = (int)Month_Cost_Mapping[j] % 2 > 0;
+
+				for (int i = 0; i < bar; i++)
+				{
+					Console.Write('█');
+				}
+				if (hasRemainder)
+				{
+					Console.Write('▌');
+				}
+				else if (bar == 0)
+				{
+					Console.Write('▬');
+				}
+
+				Console.WriteLine("    {0}", Month_Cost_Mapping[j]);
+			}
+
+			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
 		static void DeleteData(int xCoord, int yCoord)
@@ -517,6 +541,8 @@ namespace BalanceManagement
 			keyPressHandler(Console.ReadKey());
 		}
 
+		#region Subscription Module
+
 		static void ExternalInvocationHandler(string[] args)
 		{
 			string prefix = args[0].Split(' ')[0];
@@ -581,40 +607,28 @@ namespace BalanceManagement
 			}
 		}
 
+		#endregion
+
 		static string InputText()
 		{
 			Console.CursorLeft = 0;
 			return (Console.ReadLine());
 		}
 
-		static void CostInMonthView()
-		{
-			
-		}
-
 		static void SetUpCost_MonthMapping()
 		{
 			try
 			{
-				//for (int i = 0; i < 12; i++)
-				//{
-
-				//	if(i == Convert.ToInt32(from Date in TableName
-				//							where Date.ToString().Split('/')[0] == i.ToString()
-				//							select Date)
-				//	)
-				//	{
-				//		Cost_Month_Mapping[i]++;
-				//	}
-				//}
-
-				string[] monthArray = (string[])(from Date in rawData[2]
-								 select Date);
-
-				for (int i = 0; i < 12; i++)
+				for (int i = 1; i <= 12; i++)
 				{
-					Cost_Month_Mapping[Convert.ToInt32(monthArray[i])]++;
+					Month_Cost_Mapping.Add(i, 0);
 				}
+
+				for (int i = 1; i < rawData[0].Count; i++)
+				{
+					Month_Cost_Mapping[DateTime.Parse(rawData[2][i]).Month] += double.Parse(rawData[1][i]);
+				}
+				return;
 			}
 			catch (Exception ex)
 			{
