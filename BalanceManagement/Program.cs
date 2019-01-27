@@ -17,11 +17,10 @@ namespace BalanceManagement
 	class Program
 	{
 		// Connection string and SQL query  
-		static string connectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Users\yisha\OneDrive\Documents\MyDataSource\BalanceManagement.mdb";
-		static OleDbConnection connection;
-		static OleDbCommand command;
+		public static string connectionString = @"Provider=Microsoft.Jet.OLEDB.4.0;Data Source=C:\Users\yisha\OneDrive\Documents\MyDataSource\BalanceManagement.mdb";
+		public static OleDbConnection connection;
+		public static OleDbCommand command;
 
-		public static List<List<string>> rawData;
 		public static TableElement[,] FormattedData;
 
 		public const short Columnnumber = 4;
@@ -32,8 +31,6 @@ namespace BalanceManagement
 		static KeyPressDelegate KeyPressHandler = (ConsoleKeyInfo key) => { try { Console.CursorLeft--; } catch { } };
 		static HintDelegate HintHandler;
 		static ReferredFunctionDelegate ReferedFunctionHandler;
-
-		static List<object> PluginManager { get; set; } = new List<object>();
 
 		//static Communicator<OleDbConnection, OleDbCommand> DataCommunicator;
 
@@ -71,12 +68,6 @@ namespace BalanceManagement
 				// Open connecton
 				connection.Open();
 
-				PluginManager.Add
-				(
-					new Communicator<OleDbConnection, OleDbCommand, TXDeposit>
-					(connection, command, new TXDeposit())
-				);
-
 				Console.ForegroundColor = ConsoleColor.DarkGreen;
 				Console.WriteLine("Connection Susseccfully Opened");
 				Console.WriteLine(connectionString);
@@ -84,7 +75,7 @@ namespace BalanceManagement
 				KeyPressHandler += MainOption;
 				HintHandler = Hint.MainOption;
 
-				if (RetrieveData())
+				if (DataHelper.RetrieveData())
 				{
 					FormatRawData();
 
@@ -130,86 +121,11 @@ namespace BalanceManagement
 			connection?.Close();
 		}
 
-		static bool RetrieveData()
-		{
-			try
-			{
-				command.CommandText = string.Format("SELECT * FROM {0}",TableName);
-
-				using (OleDbDataReader reader = command.ExecuteReader())
-				{
-					rawData = new List<List<string>>();
-
-					for (int i = 0; i < Columnnumber; i++)
-					{
-						rawData.Add(new List<string>());
-						rawData[i].Add("");
-					}
-
-					rawData[0][0] = "ItemName";
-					rawData[1][0] = "Cost";
-					rawData[2][0] = "Date";
-					rawData[3][0] = "Comment";
-
-					int j = 1;
-
-					while (reader.Read())
-					{
-						for (int i = 0; i < Columnnumber; i++)
-						{
-							rawData[i].Add("");
-						}
-
-						rawData[0][j] = reader["ItemName"].ToString();
-						rawData[1][j] = reader["Cost"].ToString();
-						rawData[2][j] = reader["PurchaseDate"].ToString();
-						rawData[3][j] = reader["Comment"].ToString();
-
-						j++;
-					}
-				}
-
-				FormatRawData();
-
-				Console.ForegroundColor = ConsoleColor.DarkGreen;
-				Console.WriteLine("\n--Retrieved data successfully--\n");
-				Console.ForegroundColor = ConsoleColor.Black;
-
-				return true;
-			}
-			catch (IndexOutOfRangeException ex)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("\n--FAILED to retrieve data--\n");
-				Console.WriteLine(ex.Message);
-				Console.WriteLine("\nPlease check and make sure your database field name is not changed");
-				Console.ForegroundColor = ConsoleColor.Black;
-			}
-			catch (OleDbException ex)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("\n--FAILED to retrieve data--\n");
-				Console.WriteLine(ex.Message);
-				Console.WriteLine("\nPlease check and make sure your SQL Syntax is correct");
-				Console.ForegroundColor = ConsoleColor.Black;
-			}
-			catch (Exception ex)
-			{
-				Console.ForegroundColor = ConsoleColor.Red;
-				Console.WriteLine("\n--FAILED to retrieve data--\n");
-				Console.WriteLine(ex.Message);
-				Console.WriteLine("\nUnknown Error");
-				Console.ForegroundColor = ConsoleColor.Black;
-			}
-
-			return false;
-		}
-
 		static void FormatRawData()
 		{
-			FormattedData = new TableElement[Columnnumber, rawData[0].Count];
+			FormattedData = new TableElement[Columnnumber, DataHelper.rawData[0].Count];
 
-			for (int j = 0; j < rawData[0].Count; j++)
+			for (int j = 0; j < DataHelper.rawData[0].Count; j++)
 			{
 				for (int i = 0; i < Columnnumber; i++)
 				{
@@ -220,12 +136,12 @@ namespace BalanceManagement
 				}
 			}
 
-			for (int j = 0; j < rawData[0].Count; j++)
+			for (int j = 0; j < DataHelper.rawData[0].Count; j++)
 			{
-				FormattedData[0, j].Content = string.Format("{0, -20}", rawData[0][j]);
-				FormattedData[1, j].Content = string.Format("{0, 7}", rawData[1][j]);
-				FormattedData[2, j].Content = string.Format("{0, 10}", rawData[2][j]);
-				FormattedData[3, j].Content = rawData[3][j];
+				FormattedData[0, j].Content = string.Format("{0, -20}", DataHelper.rawData[0][j]);
+				FormattedData[1, j].Content = string.Format("{0, 7}", DataHelper.rawData[1][j]);
+				FormattedData[2, j].Content = string.Format("{0, 10}", DataHelper.rawData[2][j]);
+				FormattedData[3, j].Content = DataHelper.rawData[3][j];
 			}
 		}
 
@@ -248,69 +164,17 @@ namespace BalanceManagement
 			Console.WriteLine("\n\n");
 
 			DrawDiagram();
+
+			Console.WriteLine($"TerpExpressDeposit: {GetTerpExpressDeposit()}");
 		}
-
-		static void AddData(string data = "")
-		{
-			string[] tempString = new string[Columnnumber];
-
-			string[] tempInputString;
-
-			if (data == "")
-			{
-				tempInputString = Console.ReadLine().Split(',');
-			}
-			else
-			{
-				tempInputString = data.Split(',');
-			}
-
-			try
-			{
-				for (int i = 0; i < Columnnumber; i++)
-				{
-					tempString[i] = "";
-				}
-
-				for (int i = 0; i < Columnnumber; i++)
-				{
-					tempString[i] = tempInputString[i];
-				}
-			}
-			catch { }
-
-			for (int i = 0; i <= 1; i++)
-			{
-				if (tempString[i] == "")
-				{
-					Console.ForegroundColor = ConsoleColor.Red;
-					Console.WriteLine("Some required field is empty\n");
-					Console.ForegroundColor = ConsoleColor.Black;
-
-					AddData();
-					return;
-				}
-
-				if (tempString[2] == "")
-				{
-					tempString[2] = DateTime.Now.ToShortDateString();
-				}
-			}
-
-			command.CommandText = string.Format(
-				"INSERT INTO {4}(ItemName,Cost,PurchaseDate,Comment)Values('{0}','{1}','{2}','{3}')"
-				, tempString[0], tempString[1], tempString[2], tempString[3], TableName);
-
-			command.ExecuteNonQuery();
-		}
-
+		
 		static void MainOption(ConsoleKeyInfo key)
 		{
 			switch (key.Key)
 			{
 				case ConsoleKey.D1:
 					Console.Clear();
-					if (RetrieveData())
+					if (DataHelper.RetrieveData())
 					{
 						PrintData();
 					}
@@ -341,40 +205,22 @@ namespace BalanceManagement
 					break;
 			}
 		}
-
-		static void UpdateData(int xCoord, int yCoord)
-		{
-			Console.CursorLeft = 0;
-			Console.CursorTop++;
-
-			Console.ForegroundColor = ConsoleColor.Blue;
-			Console.Write("Enter Text Here >>");
-			Console.ForegroundColor = ConsoleColor.Black;
-
-			string inputField = Console.ReadLine();
-
-			command.CommandText = string.Format("UPDATE {3} SET {0} = '{1}' WHERE {0} = '{2}'", 
-				rawData[xCoord][0], inputField, rawData[xCoord][yCoord], TableName);
-
-			command.ExecuteNonQuery();
-		}
-
+		
 		static void ModifyData(ConsoleKeyInfo key)
 		{
-
 			switch (key.Key)
 			{
 				case ConsoleKey.D1:
 					// Add Data
 					Hint.AddData();
-					AddData();
+					DataHelper.Add();
 					break;
 
 				case ConsoleKey.D2:
 					// Update Data
 					Hint.UpdateData();
 					HintHandler = null;
-					ReferedFunctionHandler = UpdateData;
+					ReferedFunctionHandler = DataHelper.Update;
 					Console.CursorTop -= FormattedData.GetLength(1);
 					KeyPressHandler -= ModifyData;
 					KeyPressHandler += MoveCursor;
@@ -384,7 +230,7 @@ namespace BalanceManagement
 					// Delete Data
 					Hint.DeleteData();
 					HintHandler = null;
-					ReferedFunctionHandler = DeleteData;
+					ReferedFunctionHandler = DataHelper.Delete;
 					Console.CursorTop -= FormattedData.GetLength(1) - 6;
 					KeyPressHandler -= ModifyData;
 					KeyPressHandler += MoveCursor;
@@ -398,13 +244,12 @@ namespace BalanceManagement
 					KeyPressHandler -= ModifyData;
 					KeyPressHandler += MainOption;
 					return;
-					
+
 				default:
 					return;
 			}
 
 			PrintData();
-
 		}
 
 		static void DrawDiagram()
@@ -437,19 +282,12 @@ namespace BalanceManagement
 			Console.ForegroundColor = ConsoleColor.Black;
 		}
 
-		static void DeleteData(int xCoord, int yCoord)
-		{
-			command.CommandText = string.Format("DELETE FROM {0} WHERE Name = 'Updated Name'", TableName);
-			
-			command.ExecuteNonQuery();
-		}
-
 		static void MoveCursor(ConsoleKeyInfo key)
 		{
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].ContentColor = ConsoleColor.Black;
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].BackgroundColor = ConsoleColor.White;
 
-			if (ReferedFunctionHandler == DeleteData)
+			if (ReferedFunctionHandler == DataHelper.Delete)
 			{
 				for (int i = 0; i < Columnnumber; i++)
 				{
@@ -476,7 +314,7 @@ namespace BalanceManagement
 				case ConsoleKey.A:
 				case ConsoleKey.H:
 
-					if (ReferedFunctionHandler != DeleteData)
+					if (ReferedFunctionHandler != DataHelper.Delete)
 					{
 						SystemCursor.XCoord--;
 					}
@@ -486,7 +324,7 @@ namespace BalanceManagement
 				case ConsoleKey.D:
 				case ConsoleKey.L:
 
-					if (ReferedFunctionHandler != DeleteData)
+					if (ReferedFunctionHandler != DataHelper.Delete)
 					{
 						SystemCursor.XCoord++;
 					}
@@ -494,7 +332,7 @@ namespace BalanceManagement
 
 				case ConsoleKey.Enter:
 				case ConsoleKey.Spacebar:
-					ReferedFunctionHandler(SystemCursor.XCoord,SystemCursor.YCoord);
+					ReferedFunctionHandler(SystemCursor.XCoord, SystemCursor.YCoord);
 					break;
 
 				case ConsoleKey.Escape:
@@ -513,7 +351,7 @@ namespace BalanceManagement
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].ContentColor = ConsoleColor.White;
 			FormattedData[SystemCursor.XCoord, SystemCursor.YCoord].BackgroundColor = ConsoleColor.DarkBlue;
 
-			if (ReferedFunctionHandler == DeleteData)
+			if (ReferedFunctionHandler == DataHelper.Delete)
 			{
 				for (int i = 0; i < Columnnumber; i++)
 				{
@@ -536,7 +374,8 @@ namespace BalanceManagement
 			try
 			{
 				hintHandler();
-			} catch { }
+			}
+			catch { }
 
 			keyPressHandler(Console.ReadKey());
 		}
@@ -573,7 +412,7 @@ namespace BalanceManagement
 					// Assume the external invocation executes monthly
 					string date = DateTime.Now.Month.ToString() + "/27/" + DateTime.Now.Year;
 
-					AddData(string.Format("{0},{1},{2},Auto Executed Deduction", itemName, dataMap[1, j], date));
+					DataHelper.Add(string.Format("{0},{1},{2},Auto Executed Deduction", itemName, dataMap[1, j], date));
 				}
 			}
 		}
@@ -584,7 +423,7 @@ namespace BalanceManagement
 
 			using (StreamReader reader = new StreamReader(address))
 			{
-				List<string> content= new List<string>();
+				List<string> content = new List<string>();
 
 				while (!reader.EndOfStream)
 				{
@@ -624,9 +463,9 @@ namespace BalanceManagement
 					Month_Cost_Mapping.Add(i, 0);
 				}
 
-				for (int i = 1; i < rawData[0].Count; i++)
+				for (int i = 1; i < DataHelper.rawData[0].Count; i++)
 				{
-					Month_Cost_Mapping[DateTime.Parse(rawData[2][i]).Month] += double.Parse(rawData[1][i]);
+					Month_Cost_Mapping[DateTime.Parse(DataHelper.rawData[2][i]).Month] += double.Parse(DataHelper.rawData[1][i]);
 				}
 				return;
 			}
@@ -638,15 +477,174 @@ namespace BalanceManagement
 			}
 		}
 
-		public double GetTerpExpressDeposit()
+		public static double GetTerpExpressDeposit()
 		{
-			return 0;
+			return new TXDeposit(DataHelper.rawData).Deposit;
+		}
+
+		static class DataHelper
+		{
+			public static List<List<string>> rawData { get; set; }
+
+			public static void Add(string data = "")
+			{
+				string[] tempString = new string[Columnnumber];
+
+				string[] tempInputString;
+
+				if (data == "")
+				{
+					tempInputString = Console.ReadLine().Split(',');
+				}
+				else
+				{
+					tempInputString = data.Split(',');
+				}
+
+				try
+				{
+					for (int i = 0; i < Columnnumber; i++)
+					{
+						tempString[i] = "";
+					}
+
+					for (int i = 0; i < Columnnumber; i++)
+					{
+						tempString[i] = tempInputString[i];
+					}
+				}
+				catch { }
+
+				for (int i = 0; i <= 1; i++)
+				{
+					if (tempString[i] == "")
+					{
+						Console.ForegroundColor = ConsoleColor.Red;
+						Console.WriteLine("Some required field is empty\n");
+						Console.ForegroundColor = ConsoleColor.Black;
+
+						Add();
+						return;
+					}
+
+					if (tempString[2] == "")
+					{
+						tempString[2] = DateTime.Now.ToShortDateString();
+					}
+				}
+
+				command.CommandText = string.Format(
+					"INSERT INTO {4}(ItemName,Cost,PurchaseDate,Comment)Values('{0}','{1}','{2}','{3}')"
+					, tempString[0], tempString[1], tempString[2], tempString[3], TableName);
+
+				command.ExecuteNonQuery();
+			}
+
+			public static void Update(int xCoord, int yCoord)
+			{
+				Console.CursorLeft = 0;
+				Console.CursorTop++;
+
+				Console.ForegroundColor = ConsoleColor.Blue;
+				Console.Write("Enter Text Here >>");
+				Console.ForegroundColor = ConsoleColor.Black;
+
+				string inputField = Console.ReadLine();
+
+				command.CommandText = string.Format("UPDATE {3} SET {0} = '{1}' WHERE {0} = '{2}'",
+					rawData[xCoord][0], inputField, rawData[xCoord][yCoord], TableName);
+
+				command.ExecuteNonQuery();
+			}
+
+			public static void Delete(int xCoord, int yCoord)
+			{
+				command.CommandText = string.Format("DELETE FROM {0} WHERE Name = 'Updated Name'", TableName);
+
+				command.ExecuteNonQuery();
+			}
+
+
+			public static bool RetrieveData()
+			{
+				try
+				{
+					command.CommandText = string.Format("SELECT * FROM {0}", TableName);
+
+					using (OleDbDataReader reader = command.ExecuteReader())
+					{
+						rawData = new List<List<string>>();
+
+						for (int i = 0; i < Columnnumber; i++)
+						{
+							rawData.Add(new List<string>());
+							rawData[i].Add("");
+						}
+
+						rawData[0][0] = "ItemName";
+						rawData[1][0] = "Cost";
+						rawData[2][0] = "Date";
+						rawData[3][0] = "Comment";
+
+						int j = 1;
+
+						while (reader.Read())
+						{
+							for (int i = 0; i < Columnnumber; i++)
+							{
+								rawData[i].Add("");
+							}
+
+							rawData[0][j] = reader["ItemName"].ToString();
+							rawData[1][j] = reader["Cost"].ToString();
+							rawData[2][j] = reader["PurchaseDate"].ToString();
+							rawData[3][j] = reader["Comment"].ToString();
+
+							j++;
+						}
+					}
+
+					FormatRawData();
+
+					Console.ForegroundColor = ConsoleColor.DarkGreen;
+					Console.WriteLine("\n--Retrieved data successfully--\n");
+					Console.ForegroundColor = ConsoleColor.Black;
+
+					return true;
+				}
+				catch (IndexOutOfRangeException ex)
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("\n--FAILED to retrieve data--\n");
+					Console.WriteLine(ex.Message);
+					Console.WriteLine("\nPlease check and make sure your database field name is not changed");
+					Console.ForegroundColor = ConsoleColor.Black;
+				}
+				catch (OleDbException ex)
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("\n--FAILED to retrieve data--\n");
+					Console.WriteLine(ex.Message);
+					Console.WriteLine("\nPlease check and make sure your SQL Syntax is correct");
+					Console.ForegroundColor = ConsoleColor.Black;
+				}
+				catch (Exception ex)
+				{
+					Console.ForegroundColor = ConsoleColor.Red;
+					Console.WriteLine("\n--FAILED to retrieve data--\n");
+					Console.WriteLine(ex.Message);
+					Console.WriteLine("\nUnknown Error");
+					Console.ForegroundColor = ConsoleColor.Black;
+				}
+
+				return false;
+			}
 		}
 	}
 
 	enum Month
 	{
-		January = 1 , Febuary, March   , April   , 
+		January  , Febuary, March   , April   , 
 		May      , June   , July    , August  , 
 		September, October, November, December		
 	}
@@ -760,20 +758,6 @@ namespace BalanceManagement
 					yCoord = value;					
 				}
 			}
-		}
-	}
-
-	class Communicator<Tconnection, Tcommand, TPlugin>
-	{
-		public Tconnection Connection { get; set; }
-		public Tcommand Command { get; set; }
-		public TPlugin Plugin { get; set; }
-
-		public Communicator(Tconnection tconnection, Tcommand tcommand, TPlugin tplugin)
-		{
-			Connection = tconnection;
-			Command = tcommand;
-			Plugin = tplugin;
 		}
 	}
 }
